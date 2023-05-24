@@ -98,7 +98,7 @@ while True:
                                100))
     screen.blit(player_surface, player_rect)
     
-    
+    #update
     updateEnemies(player_rect)
     pygame.display.update()
     clock.tick(60)
