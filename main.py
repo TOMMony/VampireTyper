@@ -37,7 +37,24 @@ def checkEdge(x, y):
     return x,y
 
 def checkCamera():
-    screen.blit(background, (0,0))
+    global cameraX, cameraY
+    screen.blit(background, (0 - cameraX, 0 - cameraY))
+    screen.blit(background, (width - cameraX, 0 - cameraY))
+    screen.blit(background, (-width - cameraX, 0 - cameraY))
+    screen.blit(background, (0 - cameraX, height - cameraY))
+    screen.blit(background, (0 - cameraX, -height - cameraY))
+    screen.blit(background, (width - cameraX, height - cameraY))
+    screen.blit(background, (-width - cameraX, height - cameraY))
+    screen.blit(background, (width - cameraX, -height - cameraY))
+    screen.blit(background, (-width - cameraX, -height - cameraY))
+    if cameraY > height:
+        cameraY = 0
+    elif cameraY < 0:
+        cameraY = height
+    if cameraX > width:
+        cameraX = 0
+    elif cameraX < 0:
+        cameraX = width
     
 #Takes in player rect, but full enemy class as first argument
 def moveTowards(fromRect, destination, ms):
@@ -51,16 +68,23 @@ def moveTowards(fromRect, destination, ms):
         fromRect.centery += ms
 
 def move(player_rect, position, ms):
+    global cameraX, cameraY
+    if player_rect.collidepoint(pygame.mouse.get_pos()):
+        return
     if position[0] > player_rect.centerx:
+        cameraX += ms
         for enemy in enemies:
             getattr(enemy, "rect").centerx -= ms
     elif position[0] < player_rect.centerx:
+        cameraX -= ms
         for enemy in enemies:
             getattr(enemy, "rect").centerx += ms
     if position[1] > player_rect.centery:
+        cameraY += ms
         for enemy in enemies:
             getattr(enemy, "rect").centery -= ms
     elif position[1] < player_rect.centery:
+        cameraY -= ms
         for enemy in enemies:
             getattr(enemy, "rect").centery += ms
     
@@ -89,6 +113,8 @@ bat_surface = pygame.transform.scale(pygame.image.load("src/bat.png").convert_al
 
 enemies = []
 hp = 100
+cameraX = 0
+cameraY = 0
 
 background = pygame.transform.scale(pygame.image.load("src/background.jpg").convert(),
                                     (width, height))
@@ -118,9 +144,9 @@ while True:
                     else:
                         enemies[i] = None
             enemies = [i for i in enemies if i is not None]      
+    checkCamera()
     displayElements()
     updateEnemies(player_rect)
-    checkCamera()
     move(player_rect, pygame.mouse.get_pos(), 2)
     #moveTowards(player_rect, pygame.mouse.get_pos(), 4, True)
     pygame.display.update()
