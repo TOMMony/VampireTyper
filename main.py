@@ -1,5 +1,17 @@
 import pygame
 import time
+from enemy import Enemy
+
+def displayElements():
+    screen.blit(background, (0,0))
+    for enemy in enemies:
+        type_surface = typeFont.render(getattr(enemy, "word"), False, "white")
+        screen.blit(getattr(enemy, "surface"), getattr(enemy, "rect"))
+        screen.blit(type_surface, getattr(enemy, "rect").bottomleft)
+    screen.blit(player_surface, player_rect)
+    screen.blit(text_surface, (width/2 - pygame.Surface.get_width(text_surface)/2,
+                               100))
+    pygame.draw.line(screen, "white", player_rect.center, pygame.mouse.get_pos())
 
 def checkEdge(x, y):
     if x <= -100:
@@ -12,20 +24,22 @@ def checkEdge(x, y):
         y = - pygame.Surface.get_height(player_surface)
     return x,y
 
-def moveTowards(fromRect, destination, ms):
-    if fromRect.centerx > destination[0]:
-        fromRect.centerx -= ms
-    elif fromRect.centerx < destination[0]:
-        fromRect.centerx += ms
-    if fromRect.centery > destination[1]:
-        fromRect.centery -= ms
-    elif fromRect.centery < destination[1]:
-        fromRect.centery += ms
-
+#Takes in player rect, but full enemy class as first argument
+def moveTowards(fromRect, destination, ms, player=False):
+    if player or not player:
+        if fromRect.centerx > destination[0]:
+            fromRect.centerx -= ms
+        elif fromRect.centerx < destination[0]:
+            fromRect.centerx += ms
+        if fromRect.centery > destination[1]:
+            fromRect.centery -= ms
+        elif fromRect.centery < destination[1]:
+            fromRect.centery += ms
+    
 def updateEnemies(player_rect):
-    for enemy, enemyRect in zip(enemies_surface, enemies_rect):
-        moveTowards(enemyRect, player_rect.center, 1)
-        if enemyRect.collidepoint(player_rect.center):
+    for enemy in enemies:
+        moveTowards(getattr(enemy, "rect"), player_rect.center, 1, False)
+        if getattr(enemy, "rect").collidepoint(player_rect.center):
             print("game over loser")
 
 frames = 0
@@ -37,9 +51,10 @@ pygame.display.set_caption("Vampire Typers")
 clock = pygame.time.Clock()
 timerFont = pygame.font.Font(None, 50)
 typeFont = pygame.font.Font(None, 25)
-words = []
-enemies_surface = []
-enemies_rect = []
+
+bat_surface = pygame.transform.scale(pygame.image.load("src/bat.png").convert_alpha(), (50,50))
+
+enemies = []
 
 background = pygame.transform.scale(pygame.image.load("src/background.jpg").convert(),
                                     (width, height))
@@ -47,58 +62,32 @@ player_surface = pygame.transform.scale(pygame.image.load("src/reddeath.png").co
                                       (100,100))
 player_rect = player_surface.get_rect(center = (width/2,height/2))
 text_surface = timerFont.render(str(round(frames/60)), False, "white")
-bat_surface = pygame.transform.scale(pygame.image.load("src/bat.png").convert_alpha(),
-                                     (50,50))
-bat_rect = bat_surface.get_rect(topleft = (0, 0))
+
 ms = 2
 x,y = player_rect.topleft
-time.sleep(5)
+time.sleep(1)
 
 while True:
     if frames % 120 == 0:
-        enemies_surface.append(bat_surface)
-        enemies_rect.append(bat_surface.get_rect(topleft=(0,0)))
-        words.append("type")
+        enemies.append(Enemy("type", bat_surface, 1))
     text_surface = timerFont.render(str(round(frames/60)), False, "white")
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
         if event.type == pygame.KEYDOWN:
-            for i in range(len(words)):
-                if len(words) > 0 and len(words[i]) > 0 and event.key == eval("pygame.K_" + words[i][0]):
+            for i in range(len(enemies)):
+                if len(enemies) > 0 and len(getattr(enemies[i], "word")) > 0 and event.key == eval("pygame.K_" + getattr(enemies[i], "word")[0]):
                     #kill bats
-                    if len(words[i]) > 1:
-                        words[i] = words[i][1:]
+                    if len(getattr(enemies[i], "word")) > 1:
+                        current = getattr(enemies[i], "word")
+                        setattr(enemies[i], "word", current[1:])
                     else:
-                        enemies_surface[i] = None
-                        enemies_rect[i] = None
-                        words[i] = None
-            words = [i for i in words if i is not None]
-            enemies_surface = [i for i in enemies_surface if i is not None]
-            enemies_rect = [i for i in enemies_rect if i is not None]       
-
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT]:
-        player_rect.left -= ms
-    if keys[pygame.K_RIGHT]:
-        player_rect.right += ms
-    if keys[pygame.K_UP]:
-        player_rect.top -= ms
-    if keys[pygame.K_DOWN]:
-        player_rect.bottom += ms
-    
-    moveTowards(player_rect, pygame.mouse.get_pos(), 4)
-    screen.blit(background, (0,0))
-    for enemy, i, enemyRect in zip(enemies_surface, range(len(words)), enemies_rect):
-        type_surface = typeFont.render(words[i], False, "white")
-        screen.blit(enemy, enemyRect)
-        screen.blit(type_surface, enemyRect.bottomleft)
-        type_surface = typeFont.render(words[i], False, "white")
-    screen.blit(player_surface, player_rect)
-    screen.blit(text_surface, (width/2 - pygame.Surface.get_width(text_surface)/2,
-                               100))
+                        enemies[i] = None
+            enemies = [i for i in enemies if i is not None]      
+    displayElements()
     updateEnemies(player_rect)
+    moveTowards(player_rect, pygame.mouse.get_pos(), 4, True)
     pygame.display.update()
     clock.tick(60)
     frames += 1
