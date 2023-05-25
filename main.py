@@ -14,7 +14,6 @@ def getWord(n):
     return result
 
 def displayElements():
-    screen.blit(background, (0,0))
     for enemy in enemies:
         type_surface = typeFont.render(getattr(enemy, "word"), False, "white")
         screen.blit(getattr(enemy, "surface"), getattr(enemy, "rect"))
@@ -37,21 +36,37 @@ def checkEdge(x, y):
         y = - pygame.Surface.get_height(player_surface)
     return x,y
 
+def checkCamera():
+    screen.blit(background, (0,0))
+    
 #Takes in player rect, but full enemy class as first argument
-def moveTowards(fromRect, destination, ms, player=False):
-    if player or not player:
-        if fromRect.centerx > destination[0]:
-            fromRect.centerx -= ms
-        elif fromRect.centerx < destination[0]:
-            fromRect.centerx += ms
-        if fromRect.centery > destination[1]:
-            fromRect.centery -= ms
-        elif fromRect.centery < destination[1]:
-            fromRect.centery += ms
+def moveTowards(fromRect, destination, ms):
+    if fromRect.centerx > destination[0]:
+        fromRect.centerx -= ms
+    elif fromRect.centerx < destination[0]:
+        fromRect.centerx += ms
+    if fromRect.centery > destination[1]:
+        fromRect.centery -= ms
+    elif fromRect.centery < destination[1]:
+        fromRect.centery += ms
+
+def move(player_rect, position, ms):
+    if position[0] > player_rect.centerx:
+        for enemy in enemies:
+            getattr(enemy, "rect").centerx -= ms
+    elif position[0] < player_rect.centerx:
+        for enemy in enemies:
+            getattr(enemy, "rect").centerx += ms
+    if position[1] > player_rect.centery:
+        for enemy in enemies:
+            getattr(enemy, "rect").centery -= ms
+    elif position[1] < player_rect.centery:
+        for enemy in enemies:
+            getattr(enemy, "rect").centery += ms
     
 def updateEnemies(player_rect):
     for enemy in enemies:
-        moveTowards(getattr(enemy, "rect"), player_rect.center, 1, False)
+        moveTowards(getattr(enemy, "rect"), player_rect.center, 1)
         if getattr(enemy, "rect").collidepoint(player_rect.center):
             global hp
             hp -= 1
@@ -82,7 +97,6 @@ player_surface = pygame.transform.scale(pygame.image.load("src/reddeath.png").co
 player_rect = player_surface.get_rect(center = (width/2,height/2))
 text_surface = timerFont.render(str(round(frames/60)), False, "white")
 
-ms = 2
 x,y = player_rect.topleft
 time.sleep(1)
 
@@ -106,7 +120,9 @@ while True:
             enemies = [i for i in enemies if i is not None]      
     displayElements()
     updateEnemies(player_rect)
-    moveTowards(player_rect, pygame.mouse.get_pos(), 4, True)
+    checkCamera()
+    move(player_rect, pygame.mouse.get_pos(), 2)
+    #moveTowards(player_rect, pygame.mouse.get_pos(), 4, True)
     pygame.display.update()
     clock.tick(60)
     frames += 1
