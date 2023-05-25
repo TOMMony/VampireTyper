@@ -2,6 +2,7 @@ import pygame
 import time
 import requests
 import random
+import copy
 from enemy import Enemy
 
 def getWord(n):
@@ -17,7 +18,14 @@ def displayElements():
     for enemy in enemies:
         type_surface = typeFont.render(getattr(enemy, "word"), False, "white")
         screen.blit(getattr(enemy, "surface"), getattr(enemy, "rect"))
-        screen.blit(type_surface, getattr(enemy, "rect").bottomleft)
+        
+        tempDisplayRect = type_surface.get_rect(midtop=getattr(enemy, "rect").midbottom)
+        tempBorderRect = copy.deepcopy(tempDisplayRect); tempBorderRect.width += 3; tempBorderRect.height += 3
+        tempBorderRect.center = tempDisplayRect.center
+        pygame.draw.rect(screen, "yellow", tempBorderRect)
+        pygame.draw.rect(screen, "black", tempDisplayRect)
+        screen.blit(type_surface, tempDisplayRect)  
+
     screen.blit(player_surface, player_rect)
     screen.blit(text_surface, (width/2 - pygame.Surface.get_width(text_surface)/2,
                                100))
@@ -116,7 +124,7 @@ hp = 100
 cameraX = 0
 cameraY = 0
 
-background = pygame.transform.scale(pygame.image.load("src/background.jpg").convert(),
+background = pygame.transform.scale(pygame.image.load("src/background.png").convert(),
                                     (width, height))
 player_surface = pygame.transform.scale(pygame.image.load("src/reddeath.png").convert_alpha(),
                                       (100,100))
