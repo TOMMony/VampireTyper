@@ -5,6 +5,16 @@ import random
 import copy
 from enemy import Enemy
 
+def spawnEnemy(enemies):
+    if frames % 60 == 0 and frames < 3600:
+        enemies.append(Enemy(getWord([2, 3]), bat_surface, 2))
+        if frames % 1200 == 0:
+            sentence = " ".join([getWord([2,3]), getWord([5,6,7,8])])
+            enemies.append(Enemy(sentence, mudman_surface, 1))
+
+    elif frames % 1200 == 0 and frames < 3600:
+        sentence = " ".join([getWord([2,3]), getWord([5,6,7,8])])
+        enemies.append(Enemy(sentence, mudman_surface, 1))
 def getWord(n):
     result = random.choice(WORDS)
     result = str(result)
@@ -123,6 +133,7 @@ timerFont = pygame.font.Font(None, 50)
 typeFont = pygame.font.Font(None, 25)
 
 bat_surface = pygame.transform.scale(pygame.image.load("src/bat.png").convert_alpha(), (50,50))
+mudman_surface = pygame.transform.scale(pygame.image.load("src/mudman.png").convert_alpha(), (80,80))
 
 enemies = []
 hp = 100
@@ -140,8 +151,7 @@ x,y = player_rect.topleft
 time.sleep(1)
 
 while True:
-    if frames % 120 == 0:
-        enemies.append(Enemy(getWord([2, 3]), bat_surface, 1))
+    spawnEnemy(enemies)
     text_surface = timerFont.render(str(round(frames/60)), False, "white")
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -149,7 +159,11 @@ while True:
             exit()
         if event.type == pygame.KEYDOWN:
             for i in range(len(enemies)):
-                if len(enemies) > 0 and len(getattr(enemies[i], "word")) > 0 and event.key == eval("pygame.K_" + getattr(enemies[i], "word")[0]):
+                if getattr(enemies[i], "word")[0] == " ":
+                    cmd = "pygame.K_SPACE"
+                else:
+                    cmd = "pygame.K_" + getattr(enemies[i], "word")[0]
+                if len(enemies) > 0 and len(getattr(enemies[i], "word")) > 0 and event.key == eval(cmd):
                     #kill bats
                     if len(getattr(enemies[i], "word")) > 1:
                         current = getattr(enemies[i], "word")
