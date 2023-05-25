@@ -1,6 +1,17 @@
 import pygame
 import time
+import requests
+import random
 from enemy import Enemy
+
+def getWord(n):
+    result = random.choice(WORDS)
+    result = str(result)
+    result = result[2:len(result) - 1]
+    if len(result) not in n:
+        result = getWord(n)
+    result = str(result)
+    return result
 
 def displayElements():
     screen.blit(background, (0,0))
@@ -42,6 +53,10 @@ def updateEnemies(player_rect):
         if getattr(enemy, "rect").collidepoint(player_rect.center):
             print("game over loser")
 
+word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
+response = requests.get(word_site)
+WORDS = response.content.splitlines()
+
 frames = 0
 pygame.init()
 width = 640
@@ -69,7 +84,7 @@ time.sleep(1)
 
 while True:
     if frames % 120 == 0:
-        enemies.append(Enemy("type", bat_surface, 1))
+        enemies.append(Enemy(getWord([2, 3]), bat_surface, 1))
     text_surface = timerFont.render(str(round(frames/60)), False, "white")
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
