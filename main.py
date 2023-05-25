@@ -23,6 +23,8 @@ def displayElements():
     screen.blit(text_surface, (width/2 - pygame.Surface.get_width(text_surface)/2,
                                100))
     pygame.draw.line(screen, "white", player_rect.center, pygame.mouse.get_pos())
+    pygame.draw.rect(screen, "black", pygame.Rect(player_rect.bottomleft, (100,10)))
+    pygame.draw.rect(screen, "red", pygame.Rect(player_rect.bottomleft, (hp,10)))
 
 def checkEdge(x, y):
     if x <= -100:
@@ -51,7 +53,8 @@ def updateEnemies(player_rect):
     for enemy in enemies:
         moveTowards(getattr(enemy, "rect"), player_rect.center, 1, False)
         if getattr(enemy, "rect").collidepoint(player_rect.center):
-            print("game over loser")
+            global hp
+            hp -= 1
 
 word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
 response = requests.get(word_site)
@@ -70,6 +73,7 @@ typeFont = pygame.font.Font(None, 25)
 bat_surface = pygame.transform.scale(pygame.image.load("src/bat.png").convert_alpha(), (50,50))
 
 enemies = []
+hp = 100
 
 background = pygame.transform.scale(pygame.image.load("src/background.jpg").convert(),
                                     (width, height))
