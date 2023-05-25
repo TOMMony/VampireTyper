@@ -19,6 +19,7 @@ def displayElements():
         type_surface = typeFont.render(getattr(enemy, "word"), False, "white")
         screen.blit(getattr(enemy, "surface"), getattr(enemy, "rect"))
         
+        #creating text border, background and display typing text
         tempDisplayRect = type_surface.get_rect(midtop=getattr(enemy, "rect").midbottom)
         tempBorderRect = copy.deepcopy(tempDisplayRect); tempBorderRect.width += 3; tempBorderRect.height += 3
         tempBorderRect.center = tempDisplayRect.center
@@ -76,15 +77,19 @@ def moveTowards(fromRect, destination, ms):
         fromRect.centery += ms
 
 def move(player_rect, position, ms):
-    global cameraX, cameraY
+    global cameraX, cameraY, player_surface
     if player_rect.collidepoint(pygame.mouse.get_pos()):
         return
     if position[0] > player_rect.centerx:
         cameraX += ms
+        player_surface = pygame.transform.scale(pygame.image.load("src/reddeath1.png").convert_alpha(),
+                                      (100,100))
         for enemy in enemies:
             getattr(enemy, "rect").centerx -= ms
     elif position[0] < player_rect.centerx:
         cameraX -= ms
+        player_surface = pygame.transform.scale(pygame.image.load("src/reddeath.png").convert_alpha(),
+                                      (100,100)) 
         for enemy in enemies:
             getattr(enemy, "rect").centerx += ms
     if position[1] > player_rect.centery:
