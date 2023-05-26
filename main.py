@@ -142,6 +142,40 @@ def updateEnemies(player_rect):
             global hp
             hp -= 1
 
+def checkEvent():
+    global event, enemies, hp, lifesteal
+    if event.type == pygame.QUIT:
+            pygame.quit()
+            sys.exit(1)
+    if event.type == pygame.KEYDOWN:
+        for i in range(len(enemies)):
+            if getattr(enemies[i], "word")[0] == " ":
+                cmd = "pygame.K_SPACE"
+            else:
+                cmd = "pygame.K_" + getattr(enemies[i], "word")[0].lower()
+            if len(enemies) > 0 and len(getattr(enemies[i], "word")) > 0 and event.key == eval(cmd):
+                #kill enemies
+                if len(getattr(enemies[i], "word")) > 1:
+                    current = getattr(enemies[i], "word")
+                    setattr(enemies[i], "word", current[1:])
+                else:
+                    setattr(enemies[i], "lives", getattr(enemies[i], "lives") - 1)
+                    if getattr(enemies[i], "lives") > 0:
+                        #FIND WAY TO CHECK N DIMENSION ARRAY DIFF SIZE
+                        if isinstance(getattr(enemies[i], "wordtype")[0], int):
+                            setattr(enemies[i], "word", getWord(getattr(enemies[i], "wordtype")))
+                            if lifesteal: hp+=getattr(enemies[i], "wordtype")[0]
+                        elif isinstance(getattr(enemies[i], "wordtype")[0], list):
+                            setattr(enemies[i], "word", " ".join([getWord(i) for i in getattr(enemies[i], "wordtype")]))
+                            if lifesteal: hp+=getattr(enemies[i], "wordtype")[0][0]
+                    else:
+                        if isinstance(getattr(enemies[i], "wordtype")[0], int):
+                            if lifesteal: hp+=getattr(enemies[i], "wordtype")[0]
+                        elif isinstance(getattr(enemies[i], "wordtype")[0], list):
+                            if lifesteal: hp+=getattr(enemies[i], "wordtype")[0][0]
+                        enemies[i] = None
+        enemies = [i for i in enemies if i is not None]      
+
 word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
 response = requests.get(word_site)
 WORDS = response.content.splitlines()
@@ -163,44 +197,22 @@ text_surface = timerFont.render(str(round(frames/60)), False, "white")
 
 enemies = []
 
-hp = 100; playerMS = 2
+hp = 100; playerMS = 2; lifesteal = True; maxhp = 100
 
 cameraX = 0; cameraY = 0; x,y = player_rect.topleft
 
 time.sleep(1)
 
 while True:
-    if hp == 0:
+    if hp < 0:
         pygame.quit()
         sys.exit(1)
+    elif hp > maxhp:
+        hp = maxhp
     spawnEnemy(enemies)
     text_surface = timerFont.render(str(round(frames/60)), False, "white")
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit(1)
-        if event.type == pygame.KEYDOWN:
-            for i in range(len(enemies)):
-                if getattr(enemies[i], "word")[0] == " ":
-                    cmd = "pygame.K_SPACE"
-                else:
-                    cmd = "pygame.K_" + getattr(enemies[i], "word")[0].lower()
-                if len(enemies) > 0 and len(getattr(enemies[i], "word")) > 0 and event.key == eval(cmd):
-                    #kill enemies
-                    if len(getattr(enemies[i], "word")) > 1:
-                        current = getattr(enemies[i], "word")
-                        setattr(enemies[i], "word", current[1:])
-                    else:
-                        setattr(enemies[i], "lives", getattr(enemies[i], "lives") - 1)
-                        if getattr(enemies[i], "lives") > 0:
-                            #FIND WAY TO CHECK N DIMENSION ARRAY DIFF SIZE
-                            if isinstance(getattr(enemies[i], "wordtype"), int):
-                                setattr(enemies[i], "word", getWord(getattr(enemies[i], "wordtype"))) 
-                            elif isinstance(getattr(enemies[i], "wordtype"), list):
-                                setattr(enemies[i], "word", " ".join([getWord(i) for i in getattr(enemies[i], "wordtype")]))
-                        else:
-                            enemies[i] = None
-            enemies = [i for i in enemies if i is not None]      
+        checkEvent()
     checkCamera()
     displayElements()
     updateEnemies(player_rect)
