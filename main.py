@@ -229,6 +229,7 @@ time.sleep(1)
 
 while True:
     if hp < 0:
+        pygame.display.quit()
         pygame.quit()
         sys.exit(1)
     elif hp > maxhp:
