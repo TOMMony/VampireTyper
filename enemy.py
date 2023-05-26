@@ -13,6 +13,7 @@ class Enemy:
         self.word = word
         self.dest = None
         self.caster = None
+        self.type = type
         if not type:
             self.ms = ms
             self.lives = lives

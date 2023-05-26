@@ -14,9 +14,7 @@ def bossRush():
 def spawnEnemy(enemies):
     if frames == 0:
         bossRush()
-    if frames % 60 == 0:
-        enemies.append(Enemy(word=getWord([1]), type="Projectile", dest=copy.deepcopy(player_rect.center), caster=enemies[0]))
-        enemies.append(Enemy(type="Bat"))
+        enemies.append(Enemy(type="Bat", word=getWord([2,3])))
     if frames > 3600:
         if frames % 60000  == 0:
             enemies.append(Enemy(word=getWord([2, 3]), type="Bat"))
@@ -45,11 +43,18 @@ def getWord(n):
     result = str(result)
     return result
 
+def spawnProjectile():
+    shooters = ["Blinder"]
+    for i in range(len(enemies)):
+        if getattr(enemies[i], "type") in shooters:
+            if frames % 60 == 0:
+                enemies.append(Enemy(word=getWord([1]), type="Projectile", dest=copy.deepcopy(player_rect.center), caster=enemies[i]))
+
 def displayElements():
+    screen.blit(player_surface, player_rect)
     for enemy in enemies:
         type_surface = typeFont.render(getattr(enemy, "word"), False, "white")
         screen.blit(getattr(enemy, "surface"), getattr(enemy, "rect"))
-        
         #creating text border, background and display typing text (also makes sure text is visible always)
         global width, height
         x,y = getattr(enemy, "rect").midbottom
@@ -67,8 +72,6 @@ def displayElements():
         pygame.draw.rect(screen, "yellow", tempBorderRect)
         pygame.draw.rect(screen, "black", tempDisplayRect)
         screen.blit(type_surface, tempDisplayRect)  
-
-    screen.blit(player_surface, player_rect)
     screen.blit(text_surface, (width/2 - pygame.Surface.get_width(text_surface)/2,
                                100))
     pygame.draw.line(screen, "white", player_rect.center, pygame.mouse.get_pos())
@@ -228,6 +231,7 @@ cameraX = 0; cameraY = 0; x,y = player_rect.topleft
 time.sleep(1)
 
 while True:
+    spawnProjectile()
     if hp < 0:
         pygame.display.quit()
         pygame.quit()
