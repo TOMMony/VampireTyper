@@ -13,6 +13,8 @@ def spawnEnemy(enemies):
         if frames % 1200000 == 0:
             sentence = " ".join([getWord([2,3]), getWord([5,6,7,8])])
             enemies.append(Enemy(word=sentence, type="Green Mudman"))
+        if frames % 1200000 == 0:
+            enemies.append(Enemy(type="Blinder"))
     elif frames > 3600 and frames < 7200:
         if frames % 300 == 0:
             sentence = " ".join([getWord([2,3]), getWord([5,6,7,8])])
@@ -34,8 +36,18 @@ def displayElements():
         type_surface = typeFont.render(getattr(enemy, "word"), False, "white")
         screen.blit(getattr(enemy, "surface"), getattr(enemy, "rect"))
         
-        #creating text border, background and display typing text
-        tempDisplayRect = type_surface.get_rect(midtop=getattr(enemy, "rect").midbottom)
+        #creating text border, background and display typing text (also makes sure text is visible always)
+        global width, height
+        x,y = getattr(enemy, "rect").midbottom
+        if x > width:
+            x = width - getattr(enemy, "rect").width/2
+        elif x < 0:
+            x = 0
+        if y > height:
+            y = height - getattr(enemy, "rect").height
+        elif y < 0: 
+            y = 0
+        tempDisplayRect = type_surface.get_rect(midtop=(x,y))
         tempBorderRect = copy.deepcopy(tempDisplayRect); tempBorderRect.width += 3; tempBorderRect.height += 3
         tempBorderRect.center = tempDisplayRect.center
         pygame.draw.rect(screen, "yellow", tempBorderRect)
@@ -167,7 +179,7 @@ while True:
                 if getattr(enemies[i], "word")[0] == " ":
                     cmd = "pygame.K_SPACE"
                 else:
-                    cmd = "pygame.K_" + getattr(enemies[i], "word")[0]
+                    cmd = "pygame.K_" + getattr(enemies[i], "word")[0].lower()
                 if len(enemies) > 0 and len(getattr(enemies[i], "word")) > 0 and event.key == eval(cmd):
                     #kill enemies
                     if len(getattr(enemies[i], "word")) > 1:
@@ -177,10 +189,9 @@ while True:
                         setattr(enemies[i], "lives", getattr(enemies[i], "lives") - 1)
                         if getattr(enemies[i], "lives") > 0:
                             #FIND WAY TO CHECK N DIMENSION ARRAY DIFF SIZE
-                            if not isinstance(getattr(enemies[i], "wordtype"), list):
+                            if isinstance(getattr(enemies[i], "wordtype"), int):
                                 setattr(enemies[i], "word", getWord(getattr(enemies[i], "wordtype"))) 
                             elif isinstance(getattr(enemies[i], "wordtype"), list):
-                                print("np sucks")
                                 setattr(enemies[i], "word", " ".join([getWord(i) for i in getattr(enemies[i], "wordtype")]))
                         else:
                             enemies[i] = None
