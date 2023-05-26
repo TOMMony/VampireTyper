@@ -5,15 +5,17 @@ import random
 import copy
 import numpy as np
 import sys
+import string
 from enemy import Enemy
 
 def bossRush():
     if frames == 0:
         enemies.append(Enemy(type="Blinder"))
-    if frames % 60 == 0:
-        enemies.append(Enemy(word=getWord([2,3]), type="Bat"))
 def spawnEnemy(enemies):
-    bossRush()
+    if frames == 0:
+        bossRush()
+    if frames % 60 == 0:
+        enemies.append(Enemy(word=getWord([1]), type="Projectile", dest=copy.deepcopy(player_rect.center), caster=enemies[0]))
     if frames > 3600:
         if frames % 60000  == 0:
             enemies.append(Enemy(word=getWord([2, 3]), type="Bat"))
@@ -28,13 +30,17 @@ def spawnEnemy(enemies):
             enemies.append(Enemy(word=sentence, type="Green Mudman"))
 
 def getWord(n):
+    if n == 1:
+        return random.choice(string.ascii_letters)
     if isinstance(n, int):
         n = [n]
     result = random.choice(WORDS)
     result = str(result)
     result = result[2:len(result) - 1]
-    if len(result) not in n:
-        result = getWord(n)
+    while len(result) not in n:
+        result = result = random.choice(WORDS)
+        result = str(result)
+        result = result[2:len(result) - 1]
     result = str(result)
     return result
 
@@ -100,7 +106,10 @@ def checkCamera():
         cameraX = width
     
 #Takes in player rect, but full enemy class as first argument
-def moveTowards(fromRect, destination, ms):
+def moveTowards(enemy, destination, ms):
+    fromRect = getattr(enemy, "rect")
+    if getattr(enemy, "dest") is not None:
+        destination = getattr(enemy, "dest")
     if fromRect.centerx > destination[0]:
         fromRect.centerx -= ms
     elif fromRect.centerx < destination[0]:
@@ -120,27 +129,38 @@ def move(player_rect, position, ms):
                                       (100,100))
         for enemy in enemies:
             getattr(enemy, "rect").centerx -= ms
+            if getattr(enemy, "dest") is not None: setattr(enemy, "dest", (getattr(enemy, "dest")[0]-ms,getattr(enemy, "dest")[1])) 
     elif position[0] < player_rect.centerx:
         cameraX -= ms
         player_surface = pygame.transform.scale(pygame.image.load("src/reddeath.png").convert_alpha(),
                                       (100,100)) 
         for enemy in enemies:
             getattr(enemy, "rect").centerx += ms
+            if getattr(enemy, "dest") is not None: setattr(enemy, "dest", (getattr(enemy, "dest")[0]+ms,getattr(enemy, "dest")[1])) 
     if position[1] > player_rect.centery:
         cameraY += ms
         for enemy in enemies:
             getattr(enemy, "rect").centery -= ms
+            if getattr(enemy, "dest") is not None: setattr(enemy, "dest", (getattr(enemy, "dest")[0],getattr(enemy, "dest")[1]-ms)) 
     elif position[1] < player_rect.centery:
         cameraY -= ms
         for enemy in enemies:
             getattr(enemy, "rect").centery += ms
+            if getattr(enemy, "dest") is not None: setattr(enemy, "dest", (getattr(enemy, "dest")[0],getattr(enemy, "dest")[1]+ms)) 
     
 def updateEnemies(player_rect):
-    for enemy in enemies:
-        moveTowards(getattr(enemy, "rect"), player_rect.center, getattr(enemy, "ms"))
-        if getattr(enemy, "rect").collidepoint(player_rect.center):
+    global enemies
+    for i in range(len(enemies)):
+        moveTowards(enemies[i], player_rect.center, getattr(enemies[i], "ms"))
+        if getattr(enemies[i], "rect").collidepoint(player_rect.center):
             global hp
             hp -= 1
+        if getattr(enemies[i], "dest") is not None and getattr(enemies[i], "rect").collidepoint(getattr(enemies[i], "dest")):
+            setattr(enemies[i], "lives", getattr(enemies[i], "lives") - 1)
+            if getattr(enemies[i], "lives") <= 0:
+                enemies[i] = None
+    enemies = [i for i in enemies if i is not None]
+    
 
 def checkEvent():
     global event, enemies, hp, lifesteal
@@ -159,7 +179,10 @@ def checkEvent():
                     current = getattr(enemies[i], "word")
                     setattr(enemies[i], "word", current[1:])
                 else:
-                    setattr(enemies[i], "lives", getattr(enemies[i], "lives") - 1)
+                    if getattr(enemies[i], "type") == "Projectile":
+                        setattr(enemies[i], "lives", getattr(enemies[i], "lives") - 9999999)
+                    else:
+                        setattr(enemies[i], "lives", getattr(enemies[i], "lives") - 1)
                     if getattr(enemies[i], "lives") > 0:
                         #FIND WAY TO CHECK N DIMENSION ARRAY DIFF SIZE
                         if isinstance(getattr(enemies[i], "wordtype")[0], int):
