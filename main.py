@@ -16,6 +16,7 @@ def spawnEnemy(enemies):
         bossRush()
     if frames % 60 == 0:
         enemies.append(Enemy(word=getWord([1]), type="Projectile", dest=copy.deepcopy(player_rect.center), caster=enemies[0]))
+        enemies.append(Enemy(type="Bat"))
     if frames > 3600:
         if frames % 60000  == 0:
             enemies.append(Enemy(word=getWord([2, 3]), type="Bat"))
