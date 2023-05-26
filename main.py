@@ -3,19 +3,24 @@ import time
 import requests
 import random
 import copy
+import numpy as np
 from enemy import Enemy
 
 def spawnEnemy(enemies):
-    if frames % 60 == 0 and frames < 3600:
-        enemies.append(Enemy(getWord([2, 3]), bat_surface, 2))
-        if frames % 1200 == 0:
+    if frames < 3600:
+        if frames % 60000  == 0:
+            enemies.append(Enemy(word=getWord([2, 3]), type="Bat"))
+        if frames % 1200000 == 0:
             sentence = " ".join([getWord([2,3]), getWord([5,6,7,8])])
-            enemies.append(Enemy(sentence, mudman_surface, 1))
+            enemies.append(Enemy(word=sentence, type="Green Mudman"))
+    elif frames > 3600 and frames < 7200:
+        if frames % 300 == 0:
+            sentence = " ".join([getWord([2,3]), getWord([5,6,7,8])])
+            enemies.append(Enemy(word=sentence, type="Green Mudman"))
 
-    elif frames % 1200 == 0 and frames < 3600:
-        sentence = " ".join([getWord([2,3]), getWord([5,6,7,8])])
-        enemies.append(Enemy(sentence, mudman_surface, 1))
 def getWord(n):
+    if isinstance(n, int):
+        n = [n]
     result = random.choice(WORDS)
     result = str(result)
     result = result[2:len(result) - 1]
@@ -164,12 +169,21 @@ while True:
                 else:
                     cmd = "pygame.K_" + getattr(enemies[i], "word")[0]
                 if len(enemies) > 0 and len(getattr(enemies[i], "word")) > 0 and event.key == eval(cmd):
-                    #kill bats
+                    #kill enemies
                     if len(getattr(enemies[i], "word")) > 1:
                         current = getattr(enemies[i], "word")
                         setattr(enemies[i], "word", current[1:])
                     else:
-                        enemies[i] = None
+                        setattr(enemies[i], "lives", getattr(enemies[i], "lives") - 1)
+                        if getattr(enemies[i], "lives") > 0:
+                            #FIND WAY TO CHECK N DIMENSION ARRAY DIFF SIZE
+                            if not isinstance(getattr(enemies[i], "wordtype"), list):
+                                setattr(enemies[i], "word", getWord(getattr(enemies[i], "wordtype"))) 
+                            elif isinstance(getattr(enemies[i], "wordtype"), list):
+                                print("np sucks")
+                                setattr(enemies[i], "word", " ".join([getWord(i) for i in getattr(enemies[i], "wordtype")]))
+                        else:
+                            enemies[i] = None
             enemies = [i for i in enemies if i is not None]      
     checkCamera()
     displayElements()
