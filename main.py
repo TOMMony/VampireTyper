@@ -4,10 +4,17 @@ import requests
 import random
 import copy
 import numpy as np
+import sys
 from enemy import Enemy
 
+def bossRush():
+    if frames == 0:
+        enemies.append(Enemy(type="Blinder"))
+    if frames % 60 == 0:
+        enemies.append(Enemy(word=getWord([2,3]), type="Bat"))
 def spawnEnemy(enemies):
-    if frames < 3600:
+    bossRush()
+    if frames > 3600:
         if frames % 60000  == 0:
             enemies.append(Enemy(word=getWord([2, 3]), type="Bat"))
         if frames % 1200000 == 0:
@@ -130,7 +137,7 @@ def move(player_rect, position, ms):
     
 def updateEnemies(player_rect):
     for enemy in enemies:
-        moveTowards(getattr(enemy, "rect"), player_rect.center, 1)
+        moveTowards(getattr(enemy, "rect"), player_rect.center, getattr(enemy, "ms"))
         if getattr(enemy, "rect").collidepoint(player_rect.center):
             global hp
             hp -= 1
@@ -139,24 +146,14 @@ word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
 response = requests.get(word_site)
 WORDS = response.content.splitlines()
 
-frames = 0
+frames = 0; width = 640; height = 480
 pygame.init()
-width = 640
-height = 480
+
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Vampire Typers")
 clock = pygame.time.Clock()
 timerFont = pygame.font.Font(None, 50)
 typeFont = pygame.font.Font(None, 25)
-
-bat_surface = pygame.transform.scale(pygame.image.load("src/bat.png").convert_alpha(), (50,50))
-mudman_surface = pygame.transform.scale(pygame.image.load("src/mudman.png").convert_alpha(), (80,80))
-
-enemies = []
-hp = 100
-cameraX = 0
-cameraY = 0
-
 background = pygame.transform.scale(pygame.image.load("src/background.png").convert(),
                                     (width, height))
 player_surface = pygame.transform.scale(pygame.image.load("src/reddeath.png").convert_alpha(),
@@ -164,16 +161,24 @@ player_surface = pygame.transform.scale(pygame.image.load("src/reddeath.png").co
 player_rect = player_surface.get_rect(center = (width/2,height/2))
 text_surface = timerFont.render(str(round(frames/60)), False, "white")
 
-x,y = player_rect.topleft
+enemies = []
+
+hp = 100; playerMS = 2
+
+cameraX = 0; cameraY = 0; x,y = player_rect.topleft
+
 time.sleep(1)
 
 while True:
+    if hp == 0:
+        pygame.quit()
+        sys.exit(1)
     spawnEnemy(enemies)
     text_surface = timerFont.render(str(round(frames/60)), False, "white")
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
-            exit()
+            sys.exit(1)
         if event.type == pygame.KEYDOWN:
             for i in range(len(enemies)):
                 if getattr(enemies[i], "word")[0] == " ":
@@ -199,8 +204,7 @@ while True:
     checkCamera()
     displayElements()
     updateEnemies(player_rect)
-    move(player_rect, pygame.mouse.get_pos(), 2)
-    #moveTowards(player_rect, pygame.mouse.get_pos(), 4, True)
+    move(player_rect, pygame.mouse.get_pos(), playerMS)
     pygame.display.update()
     clock.tick(60)
     frames += 1
