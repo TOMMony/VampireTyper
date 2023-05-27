@@ -6,49 +6,42 @@ import copy
 import numpy as np
 import sys
 import string
-from enemy import Enemy
+from enemy import Enemy, getWord
 
-def bossRush():
+def bossRush(enemies):
     if frames == 0:
         enemies.append(Enemy(type="Blinder"))
-def spawnEnemy(enemies):
-    if frames == 0:
-        bossRush()
-        enemies.append(Enemy(type="Bat", word=getWord([2,3])))
-    if frames > 3600:
-        if frames % 60000  == 0:
-            enemies.append(Enemy(word=getWord([2, 3]), type="Bat"))
-        if frames % 1200000 == 0:
-            sentence = " ".join([getWord([2,3]), getWord([5,6,7,8])])
-            enemies.append(Enemy(word=sentence, type="Green Mudman"))
-        if frames % 1200000 == 0:
-            enemies.append(Enemy(type="Blinder"))
-    elif frames > 3600 and frames < 7200:
-        if frames % 300 == 0:
-            sentence = " ".join([getWord([2,3]), getWord([5,6,7,8])])
-            enemies.append(Enemy(word=sentence, type="Green Mudman"))
 
-def getWord(n):
-    if n == 1:
-        return random.choice(string.ascii_letters)
-    if isinstance(n, int):
-        n = [n]
-    result = random.choice(WORDS)
-    result = str(result)
-    result = result[2:len(result) - 1]
-    while len(result) not in n:
-        result = result = random.choice(WORDS)
-        result = str(result)
-        result = result[2:len(result) - 1]
-    result = str(result)
-    return result
+def firstStage(enemies):
+    seconds = frames / 60
+    if seconds < 60 and seconds != 0 :
+        if seconds % 2 == 0:
+            enemies.append(Enemy(type="Bat"))
+        if seconds % 10 == 0:
+            enemies.append(Enemy(type="Green Mudman"))
+        if seconds % 20 == 0:
+            for i in range(2):
+                enemies.append(Enemy(type="Bat"))
+    elif seconds == 60:
+        enemies.append(Enemy(type="Venus"))
+        for i in range(10):
+            enemies.append(Enemy(type="Green Mudman"))
+    elif seconds < 120 and seconds != 0:
+        if seconds % 40 == 0:
+            for i in range(5):
+                enemies.append(Enemy(type="Green Mudman"))
+
+def spawnEnemy(enemies):
+    firstStage(enemies)
 
 def spawnProjectile():
-    shooters = ["Blinder"]
     for i in range(len(enemies)):
-        if getattr(enemies[i], "type") in shooters:
+        if getattr(enemies[i], "type") == "Blinder":
             if frames % 60 == 0:
-                enemies.append(Enemy(word=getWord([1]), type="Projectile", dest=copy.deepcopy(player_rect.center), caster=enemies[i]))
+                enemies.append(Enemy(type="Projectile", dest=copy.deepcopy(player_rect.center), caster=enemies[i]))
+        elif getattr(enemies[i], "type") == "Venus":
+            if frames % 60 == 0:
+                enemies.append(Enemy(type="Projectile", dest=copy.deepcopy(player_rect.center), caster=enemies[i]))
 
 def displayElements():
     screen.blit(player_surface, player_rect)
@@ -122,6 +115,11 @@ def moveTowards(enemy, destination, ms):
         fromRect.centery -= ms
     elif fromRect.centery < destination[1]:
         fromRect.centery += ms
+    #if close enough to target then snap, prevents jiggling 
+    if abs(fromRect.centerx - destination[0]) < ms:
+            fromRect.centerx = destination[0]
+    if abs(fromRect.centery - destination[1]) < ms:
+            fromRect.centery = destination[1]
 
 def move(player_rect, position, ms):
     global cameraX, cameraY, player_surface
@@ -191,21 +189,18 @@ def checkEvent():
                         #FIND WAY TO CHECK N DIMENSION ARRAY DIFF SIZE
                         if isinstance(getattr(enemies[i], "wordtype")[0], int):
                             setattr(enemies[i], "word", getWord(getattr(enemies[i], "wordtype")))
-                            if lifesteal: hp+=getattr(enemies[i], "wordtype")[0]
-                        elif isinstance(getattr(enemies[i], "wordtype")[0], list):
-                            setattr(enemies[i], "word", " ".join([getWord(i) for i in getattr(enemies[i], "wordtype")]))
-                            if lifesteal: hp+=getattr(enemies[i], "wordtype")[0][0]
+                            if lifesteal: hp+=getattr(enemies[i], "wordtype")[0] * lifesteal
+                        elif not isinstance(getattr(enemies[i], "wordtype")[0], int):
+                            setattr(enemies[i], "word", getWord(getattr(enemies[i], "wordtype")))
+                            if lifesteal: hp+=getattr(enemies[i], "wordtype")[0][0] * lifesteal
                     else:
                         if isinstance(getattr(enemies[i], "wordtype")[0], int):
-                            if lifesteal: hp+=getattr(enemies[i], "wordtype")[0]
+                            if lifesteal: hp+=getattr(enemies[i], "wordtype")[0] * lifesteal
                         elif isinstance(getattr(enemies[i], "wordtype")[0], list):
-                            if lifesteal: hp+=getattr(enemies[i], "wordtype")[0][0]
+                            if lifesteal: hp+=getattr(enemies[i], "wordtype")[0][0] * lifesteal
                         enemies[i] = None
         enemies = [i for i in enemies if i is not None]      
 
-word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
-response = requests.get(word_site)
-WORDS = response.content.splitlines()
 
 frames = 0; width = 640; height = 480
 pygame.init()
@@ -214,7 +209,7 @@ screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Vampire Typers")
 clock = pygame.time.Clock()
 timerFont = pygame.font.Font(None, 50)
-typeFont = pygame.font.Font(None, 25)
+typeFont = pygame.font.Font(None, 30)
 background = pygame.transform.scale(pygame.image.load("src/background.png").convert(),
                                     (width, height))
 player_surface = pygame.transform.scale(pygame.image.load("src/reddeath.png").convert_alpha(),
@@ -224,7 +219,7 @@ text_surface = timerFont.render(str(round(frames/60)), False, "white")
 
 enemies = []
 
-hp = 100; playerMS = 2; lifesteal = True; maxhp = 100
+hp = 100; playerMS = 2; lifesteal = 10; maxhp = 100
 
 cameraX = 0; cameraY = 0; x,y = player_rect.topleft
 
