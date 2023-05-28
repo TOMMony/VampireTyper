@@ -30,6 +30,9 @@ def firstStage(enemies):
         if seconds % 40 == 0:
             for i in range(5):
                 enemies.append(Enemy(type="Green Mudman"))
+        elif seconds > 80:
+            if not enemies:
+                enemies.append(Enemy(type="Green Mudman"))
 
 def spawnEnemy(enemies):
     firstStage(enemies)
@@ -156,7 +159,11 @@ def updateEnemies(player_rect):
         moveTowards(enemies[i], player_rect.center, getattr(enemies[i], "ms"))
         if getattr(enemies[i], "rect").collidepoint(player_rect.center):
             global hp
-            hp -= 1
+            #reduce difficulty by halving speedy monster damage
+            if getattr(enemies[i], "ms") <= playerMS:
+                hp -= 1
+            else:
+                hp -= .5
         if getattr(enemies[i], "dest") is not None and getattr(enemies[i], "rect").collidepoint(getattr(enemies[i], "dest")):
             setattr(enemies[i], "lives", getattr(enemies[i], "lives") - 1)
             if getattr(enemies[i], "lives") <= 0:
@@ -219,7 +226,7 @@ text_surface = timerFont.render(str(round(frames/60)), False, "white")
 
 enemies = []
 
-hp = 100; playerMS = 2; lifesteal = 10; maxhp = 100
+hp = 100; playerMS = 2; lifesteal = 1; maxhp = 100
 
 cameraX = 0; cameraY = 0; x,y = player_rect.topleft
 

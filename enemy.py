@@ -46,7 +46,7 @@ class Enemy:
         elif type == "Venus":
             self.surface = venus_surface
             self.ms = 1
-            self.lives = 3
+            self.lives = 2
             self.wordtype = [range(5,9), range(5,8), range(5,9), range(2,10), range(5,8), range(1,10), range(8,9), range(4,7)]
             self.word = getWord(self.wordtype)
         elif type == "Projectile":
