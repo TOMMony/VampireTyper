@@ -79,7 +79,6 @@ def displayElements():
     maxhpRect.midtop = player_rect.midbottom
     pygame.draw.rect(screen, "black", maxhpRect)
     pygame.draw.rect(screen, "red", pygame.Rect(maxhpRect.topleft, (hp,10)))
-    
 def levelUpScreen():
     screen.blit(maxHpChoice, hpRect)
     screen.blit(lifestealChoice, lifestealRect)
@@ -224,14 +223,15 @@ def checkEvent():
                         elif not isinstance(getattr(enemies[i], "wordtype")[0], int):
                             setattr(enemies[i], "word", getWord(getattr(enemies[i], "wordtype")))
                             if lifesteal: hp+=getattr(enemies[i], "wordtype")[0][0] * lifesteal
-                    else:
+                    elif getattr(enemies[i], "type") != "Projectile":
                         if isinstance(getattr(enemies[i], "wordtype")[0], int):
                             if lifesteal: hp+=getattr(enemies[i], "wordtype")[0] * lifesteal
                             experience += getattr(enemies[i], "wordtype")[0]
                         elif isinstance(getattr(enemies[i], "wordtype")[0], list):
                             if lifesteal: hp+=getattr(enemies[i], "wordtype")[0][0] * lifesteal
                             experience += max(getattr(enemies[i], "wordtype")[0])
-
+                        enemies[i] = None
+                    else:
                         enemies[i] = None
         enemies = [i for i in enemies if i is not None]      
 def checkEventLevel():
