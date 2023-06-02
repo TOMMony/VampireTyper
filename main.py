@@ -76,6 +76,12 @@ def levelUpScreen():
     screen.blit(maxHpChoice, hpRect)
     screen.blit(lifestealChoice, lifestealRect)
     screen.blit(msChoice, msRect)
+    hpType = descriptFont.render("Blessing of Gus: Increases Max HP.", False, "white")
+    lfType = descriptFont.render("Vampire's Blessing: Lifesteal Up!", False, "white")
+    msType = descriptFont.render("Boots of Swiftness: Increases Movement Speed!!!", False, "white")
+    screen.blit(hpType, hpRect)
+    screen.blit(lfType, lifestealRect)
+    screen.blit(msType, msRect)
 
 def checkEdge(x, y):
     if x <= -100:
@@ -231,7 +237,7 @@ def checkEvent():
         enemies = [i for i in enemies if i is not None]      
 
 def checkEventLevel():
-    global maxhp, levelUp
+    global maxhp, levelUp, lifesteal, playerMS
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
@@ -239,6 +245,12 @@ def checkEventLevel():
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if hpRect.collidepoint(event.pos):
                 maxhp += 50
+                levelUp = False
+            elif lifestealRect.collidepoint(event.pos):
+                lifesteal += .5
+                levelUp = False
+            elif msRect.collidepoint(event.pos):
+                playerMS += .2
                 levelUp = False
         
     
@@ -262,6 +274,7 @@ pygame.Surface.fill(msChoice, "gray")
 clock = pygame.time.Clock()
 timerFont = pygame.font.Font(None, 50)
 typeFont = pygame.font.Font(None, 30)
+descriptFont = pygame.font.Font(None, 20)
 background = pygame.transform.scale(pygame.image.load("src/background.png").convert(),
                                     (width, height))
 player_surface = pygame.transform.scale(pygame.image.load("src/reddeath.png").convert_alpha(),
