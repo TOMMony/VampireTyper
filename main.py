@@ -8,6 +8,8 @@ from enemy import Enemy, getWord
 def bossRush(enemies):
     if frames == 0:
         enemies.append(Enemy(type="Blinder"))
+    if frames % 60 == 0 and getattr(enemies[0], "type") == "Blinder":
+        enemies.append(Enemy(type="Bat"))
 def firstStage(enemies):
     seconds = frames / 60
     if seconds < 60 and seconds != 0 :
@@ -30,15 +32,18 @@ def firstStage(enemies):
             if not enemies:
                 enemies.append(Enemy(type="Green Mudman"))
     elif seconds < 180 and seconds != 0:
-        if seconds % 4 == 0:
+        if len(enemies) == 0:
             enemies.append(Enemy(type="Green Mudman"))
-        if seconds == 150:
-            for i in range(2):
-                enemies.append(Enemy(type="Venus"))
     elif seconds == 180:
         for i in range(5):
             enemies.append(Enemy(type="Ghost"))
         enemies.append(Enemy(type="Mantichana"))
+    elif seconds < 230 and seconds != 0:
+        if seconds % 2 == 0:
+            for i in range(3):
+                enemies.append(Enemy(type="Ghost"))
+    elif seconds == 240:
+        bossRush(enemies)
 def spawnEnemy(enemies):
     firstStage(enemies)
 def spawnProjectile():
@@ -51,6 +56,7 @@ def spawnProjectile():
                 enemies.append(Enemy(type="Projectile", dest=copy.deepcopy(player_rect.center), caster=enemies[i]))
 def displayElements():
     screen.blit(player_surface, player_rect)
+    pygame.draw.rect(screen, "purple", pygame.Rect((0,0), ((experience/((level+1)*10 + level*10))*width,5)))
     for enemy in enemies:
         type_surface = typeFont.render(getattr(enemy, "word"), False, "white")
         screen.blit(getattr(enemy, "surface"), getattr(enemy, "rect"))
@@ -74,7 +80,6 @@ def displayElements():
     screen.blit(text_surface, (width/2 - pygame.Surface.get_width(text_surface)/2,
                                100))
     pygame.draw.line(screen, "white", player_rect.center, pygame.mouse.get_pos())
-    pygame.draw.rect(screen, "purple", pygame.Rect((0,0), ((experience/((level+1)*10))*width,10)))
     maxhpRect = pygame.Rect(player_rect.bottomleft, (maxhp,10))
     maxhpRect.midtop = player_rect.midbottom
     pygame.draw.rect(screen, "black", maxhpRect)
@@ -277,7 +282,7 @@ background = pygame.transform.scale(pygame.image.load("src/background.png").conv
                                     (width, height))
 player_surface = pygame.transform.scale(pygame.image.load("src/reddeath.png").convert_alpha(),
                                       (100,100))
-levelUp = True
+levelUp = False
 player_rect = player_surface.get_rect(center = (width/2,height/2))
 text_surface = timerFont.render(str(round(frames/60)), False, "white")
 
@@ -290,7 +295,6 @@ cameraX = 0; cameraY = 0; x,y = player_rect.topleft
 time.sleep(1)
 
 while True:
-    print(maxhp)
     pygame.display.update()
     if not levelUp:
         spawnProjectile()
@@ -312,7 +316,7 @@ while True:
         frames += 1
         player_rect.left,player_rect.top = checkEdge(player_rect.left,
                                                     player_rect.top)
-        if experience >= (level + 1) * 10:
+        if experience >= (level + 1) * 10 + level * 10:
             level += 1
             levelUp = True 
     else:

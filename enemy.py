@@ -42,12 +42,12 @@ class Enemy:
         elif type == "Blinder":
             self.surface = blinder_surface
             self.ms = 1
-            self.lives = 5
+            self.lives = 3
             self.wordtype = [range(5,9), range(5,8), range(5,9), range(2,10), range(5,8), range(1,10)]
             self.word = "YOU WILL SUCCUMB TO THE WRATH OF DEATH ITSELF"
         elif type == "Venus":
             self.surface = venus_surface
-            self.ms = 1
+            self.ms = 0
             self.lives = 2
             self.wordtype = [range(5,9), range(5,8), range(5,9), range(2,10), range(5,8), range(1,10), range(8,9), range(4,7)]
             self.word = getWord(self.wordtype)
