@@ -1,11 +1,8 @@
 import pygame
 import time
-import requests
-import random
 import copy
 import numpy as np
 import sys
-import string
 from enemy import Enemy, getWord
 
 def bossRush(enemies):
@@ -28,7 +25,7 @@ def firstStage(enemies):
             enemies.append(Enemy(type="Green Mudman"))
     elif seconds < 120 and seconds != 0:
         if seconds % 40 == 0:
-            for i in range(5):
+            for i in range(3):
                 enemies.append(Enemy(type="Green Mudman"))
         elif seconds > 80:
             if not enemies:
@@ -152,12 +149,28 @@ def move(player_rect, position, ms):
         for enemy in enemies:
             getattr(enemy, "rect").centery += ms
             if getattr(enemy, "dest") is not None: setattr(enemy, "dest", (getattr(enemy, "dest")[0],getattr(enemy, "dest")[1]+ms)) 
+
+def knockback(enemy):
+    position = getattr(enemy, "rect").center
+    speed = getattr(enemy, "ms")
+    if position[0] > width/2:
+        #push right
+        getattr(enemy, "rect").centerx += knock * speed
+    elif position[0] < width/2:
+        #push left
+        getattr(enemy, "rect").centerx -= knock * speed
+    if position[1] > height/2:
+        getattr(enemy, "rect").centery += knock * speed
+    elif position[1] < height/2:
+        getattr(enemy, "rect").centery -= knock * speed
+
     
 def updateEnemies(player_rect):
     global enemies
     for i in range(len(enemies)):
         moveTowards(enemies[i], player_rect.center, getattr(enemies[i], "ms"))
         if getattr(enemies[i], "rect").collidepoint(player_rect.center):
+            knockback(enemies[i])
             global hp
             #reduce difficulty by halving speedy monster damage
             if getattr(enemies[i], "ms") <= playerMS:
@@ -226,7 +239,7 @@ text_surface = timerFont.render(str(round(frames/60)), False, "white")
 
 enemies = []
 
-hp = 100; playerMS = 2; lifesteal = 1; maxhp = 100
+hp = 100; playerMS = 2; lifesteal = 1; maxhp = 100; knock = 0
 
 cameraX = 0; cameraY = 0; x,y = player_rect.topleft
 
