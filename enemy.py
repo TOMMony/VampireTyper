@@ -14,6 +14,8 @@ mudman_surface = pygame.transform.scale(pygame.image.load("src/mudman.png"), (80
 blinder_surface = pygame.transform.scale(pygame.image.load("src/blinder.png"), (200,200))
 venus_surface = pygame.transform.scale(pygame.image.load("src/venus.png"), (100,100))
 fire_surface = pygame.transform.scale(pygame.image.load("src/fire.png"), (10,10))
+mantichana_surface = pygame.transform.scale(pygame.image.load("src/mantichana.png"), (120,120))
+ghost_surface = pygame.transform.scale(pygame.image.load("src/ghost.png"), (75,75))
 
 class Enemy:
 
@@ -48,6 +50,18 @@ class Enemy:
             self.ms = 1
             self.lives = 2
             self.wordtype = [range(5,9), range(5,8), range(5,9), range(2,10), range(5,8), range(1,10), range(8,9), range(4,7)]
+            self.word = getWord(self.wordtype)
+        elif type == "Mantichana":
+            self.surface = mantichana_surface
+            self.ms = 2
+            self.lives = 1
+            self.wordtype = [range(10,15)]
+            self.word = getWord(self.wordtype)
+        elif type == "Ghost":
+            self.surface = ghost_surface
+            self.ms = 3
+            self.lives = 1
+            self.wordtype = [range(4,5)]
             self.word = getWord(self.wordtype)
         elif type == "Projectile":
             if getattr(caster, "surface") == blinder_surface:

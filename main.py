@@ -8,7 +8,6 @@ from enemy import Enemy, getWord
 def bossRush(enemies):
     if frames == 0:
         enemies.append(Enemy(type="Blinder"))
-
 def firstStage(enemies):
     seconds = frames / 60
     if seconds < 60 and seconds != 0 :
@@ -30,10 +29,18 @@ def firstStage(enemies):
         elif seconds > 80:
             if not enemies:
                 enemies.append(Enemy(type="Green Mudman"))
-
+    elif seconds < 180 and seconds != 0:
+        if seconds % 4 == 0:
+            enemies.append(Enemy(type="Green Mudman"))
+        if seconds == 150:
+            for i in range(2):
+                enemies.append(Enemy(type="Venus"))
+    elif seconds == 180:
+        for i in range(5):
+            enemies.append(Enemy(type="Ghost"))
+        enemies.append(Enemy(type="Mantichana"))
 def spawnEnemy(enemies):
-    bossRush(enemies)
-
+    firstStage(enemies)
 def spawnProjectile():
     for i in range(len(enemies)):
         if getattr(enemies[i], "type") == "Blinder":
@@ -42,7 +49,6 @@ def spawnProjectile():
         elif getattr(enemies[i], "type") == "Venus":
             if frames % 60 == 0:
                 enemies.append(Enemy(type="Projectile", dest=copy.deepcopy(player_rect.center), caster=enemies[i]))
-
 def displayElements():
     screen.blit(player_surface, player_rect)
     for enemy in enemies:
@@ -68,10 +74,12 @@ def displayElements():
     screen.blit(text_surface, (width/2 - pygame.Surface.get_width(text_surface)/2,
                                100))
     pygame.draw.line(screen, "white", player_rect.center, pygame.mouse.get_pos())
-    pygame.draw.rect(screen, "black", pygame.Rect(player_rect.bottomleft, (100,10)))
-    pygame.draw.rect(screen, "red", pygame.Rect(player_rect.bottomleft, (hp,10)))
     pygame.draw.rect(screen, "purple", pygame.Rect((0,0), ((experience/((level+1)*10))*width,10)))
-
+    maxhpRect = pygame.Rect(player_rect.bottomleft, (maxhp,10))
+    maxhpRect.midtop = player_rect.midbottom
+    pygame.draw.rect(screen, "black", maxhpRect)
+    pygame.draw.rect(screen, "red", pygame.Rect(maxhpRect.topleft, (hp,10)))
+    
 def levelUpScreen():
     screen.blit(maxHpChoice, hpRect)
     screen.blit(lifestealChoice, lifestealRect)
@@ -82,7 +90,6 @@ def levelUpScreen():
     screen.blit(hpType, hpRect)
     screen.blit(lfType, lifestealRect)
     screen.blit(msType, msRect)
-
 def checkEdge(x, y):
     if x <= -100:
         x = width
@@ -93,7 +100,6 @@ def checkEdge(x, y):
     elif y >= height + 100:
         y = - pygame.Surface.get_height(player_surface)
     return x,y
-
 def checkCamera():
     global cameraX, cameraY
     screen.blit(background, (0 - cameraX, 0 - cameraY))
@@ -113,7 +119,6 @@ def checkCamera():
         cameraX = 0
     elif cameraX < 0:
         cameraX = width
-    
 #Takes in player rect, but full enemy class as first argument
 #Unable to take decimal ms as center only supports int
 def moveTowards(enemy, destination, ms):
@@ -133,7 +138,6 @@ def moveTowards(enemy, destination, ms):
             fromRect.centerx = destination[0]
     if abs(fromRect.centery - destination[1]) < ms:
             fromRect.centery = destination[1]
-
 def move(player_rect, position, ms):
     global cameraX, cameraY, player_surface
     if player_rect.collidepoint(pygame.mouse.get_pos()):
@@ -162,7 +166,6 @@ def move(player_rect, position, ms):
         for enemy in enemies:
             getattr(enemy, "rect").centery += ms
             if getattr(enemy, "dest") is not None: setattr(enemy, "dest", (getattr(enemy, "dest")[0],getattr(enemy, "dest")[1]+ms)) 
-
 def knockback(enemy):
     position = getattr(enemy, "rect").center
     if position[0] > width/2:
@@ -175,8 +178,6 @@ def knockback(enemy):
         getattr(enemy, "rect").centery += knock 
     elif position[1] < height/2:
         getattr(enemy, "rect").centery -= knock 
-
-    
 def updateEnemies(player_rect):
     global enemies
     for i in range(len(enemies)):
@@ -194,8 +195,6 @@ def updateEnemies(player_rect):
             if getattr(enemies[i], "lives") <= 0:
                 enemies[i] = None
     enemies = [i for i in enemies if i is not None]
-    
-
 def checkEvent():
     global event, enemies, hp, lifesteal, experience
     if event.type == pygame.QUIT:
@@ -235,7 +234,6 @@ def checkEvent():
 
                         enemies[i] = None
         enemies = [i for i in enemies if i is not None]      
-
 def checkEventLevel():
     global maxhp, levelUp, lifesteal, playerMS
     for event in pygame.event.get():
@@ -285,13 +283,14 @@ text_surface = timerFont.render(str(round(frames/60)), False, "white")
 
 enemies = []
 
-hp = 100; playerMS = 2; lifesteal = 1; maxhp = 100; knock = 2; armor = 1; experience = 0; level = 1
+hp = 100; playerMS = 2; lifesteal = 0; maxhp = 100; knock = 2; armor = 1; experience = 0; level = 1
 
 cameraX = 0; cameraY = 0; x,y = player_rect.topleft
 
 time.sleep(1)
 
 while True:
+    print(maxhp)
     pygame.display.update()
     if not levelUp:
         spawnProjectile()
